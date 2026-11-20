@@ -7,9 +7,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Unzip project
+        run: |
+          ZIP=$(find . -maxdepth 3 -iname 'Sprunki*.zip' | head -n1)
+          echo "Found zip: $ZIP"
+          mkdir -p proj
+          unzip -q "$ZIP" -d proj
+          echo "PROJ=$(realpath proj/*/)" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - name: Fetch Scratch runtime (offline copy goes inside the APK)
+        working-directory: ${{ env.PROJ }}
         run: |
           npm install
           bash scripts/copy-runtime.sh
@@ -18,8 +26,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: 8.7 }
       - name: Build APK
+        working-directory: ${{ env.PROJ }}
         run: gradle assembleRelease --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: Sprunki-Retake-Human-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: ${{ env.PROJ }}/app/build/outputs/apk/release/*.apk
