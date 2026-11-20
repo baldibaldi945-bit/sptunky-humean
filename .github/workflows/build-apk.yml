@@ -20,7 +20,11 @@ jobs:
         working-directory: ${{ env.PROJ }}
         run: |
           npm install
-          bash scripts/copy-runtime.sh
+          SRC=$(find node_modules/@turbowarp/scaffolding -name 'scaffolding-with-music.js' | head -n1)
+          [ -n "$SRC" ] || SRC=$(find node_modules/@turbowarp/scaffolding -name 'scaffolding-full.js' | head -n1)
+          [ -n "$SRC" ] || { echo "runtime file not found"; find node_modules/@turbowarp/scaffolding -name '*.js' -path '*dist*'; exit 1; }
+          echo "Using $SRC"
+          cp "$SRC" app/src/main/assets/www/scaffolding-full.js
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: 17 }
       - uses: gradle/actions/setup-gradle@v4
